@@ -2,6 +2,8 @@
 >模型架构采用Seq2Seq,创新点有二：
 * 先使用DT Cell 双向抽取、经过MaxPool/EveragePool得到全局表征
 * 使用改进的GRU Cell  ==>  DT Cell(Deep Transition cell;来自腾讯2019) 处理时序问题更强
+> 训练入口：thumb\bin\trainer
+> 模型主题代码块：thumb\models\rnnsearch\modelgraph
 ## 架构图
 * 英文语料可以使用char_CNN,中文语料用不用char都无所谓
 * 使用Glove字向量作为初始嵌入，加入位置特征，放入双向DT Cell抽取句向量，使用Attention方式在自的维度加权求和，得到Global特征向量[seq,size]
