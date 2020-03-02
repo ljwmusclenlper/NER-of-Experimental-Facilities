@@ -17,3 +17,61 @@
 
 ## DT Cell
 * ![](DTceLL.png)
+* 代码如下：<br>
+    class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):
+    """ DL4MT's implementation of GRUCell with LAU and Transition
+
+    Args:
+        num_units: int, The number of units in the RNN cell.
+        reuse: (optional) Python boolean describing whether to reuse
+            variables in an existing scope.  If not `True`, and the existing
+            scope already has the given variables, an error is raised.
+    """
+
+    def __init__(self, num_transi, num_units, keep_prob=None, reuse=None):
+        super(DL4MTGRULAUTransiLNCell, self).__init__(_reuse=reuse)
+        self._num_units = num_units
+        self._keep_prob = keep_prob
+        self._num_transi = num_transi
+
+    def __call__(self, inputs, state, scope=None):
+        with tf.variable_scope(scope, default_name="gru_cell",
+                               values=[inputs, state]):
+            if not isinstance(inputs, (list, tuple)):
+                inputs = [inputs]
+
+            all_inputs = list(inputs) + [state] 
+            #[batch,50]/[batch,512]/[batch,256]==>[batch,256]===>  layer_norm:(input-reduce_mean(axis=-1))/variance
+            r = tf.nn.sigmoid(layer_norm(linear(all_inputs, self._num_units, False, False,
+                                                scope="reset_gate"),
+                                         scope="reset_gate_ln"))#[batch,256]
+            r2 = tf.nn.sigmoid(layer_norm(linear(all_inputs, self._num_units, False, False,
+                                                 scope="reset_gate2"),
+                                          scope="reset_gate2_ln"))#[batch,256]
+            u = tf.nn.sigmoid(layer_norm(linear(all_inputs, self._num_units, False, False,
+                                                scope="update_gate"),
+                                         scope="update_gate_ln"))#[batch,256]
+            linear_state = linear(state, self._num_units, True, False, scope="linear_state")#[batch,256]
+            linear_inputs = linear(inputs, self._num_units, False, False, scope="linear_inputs")#[batch,256]
+            linear_inputs_transform = linear(inputs, self._num_units, False, False, scope="linear_inputs_transform")#[batch,256]
+            c = tf.tanh(linear_inputs + r * linear_state) + r2 * linear_inputs_transform
+            if self._keep_prob and self._keep_prob < 1.0:
+                c = tf.nn.dropout(c, self._keep_prob)
+
+            new_state = (1.0 - u) * state + u * c
+
+        for i in range(int(self._num_transi)):
+            rh = tf.nn.sigmoid(layer_norm(linear(new_state, self._num_units, False, False,
+                                                 scope="trans_reset_gate_l%d" %i),
+                                          scope="trans_reset_gate_ln_l%d" %i))
+            uh = tf.nn.sigmoid(layer_norm(linear(new_state, self._num_units, False, False,
+                                                 scope="trans_update_gate_l%d" %i),
+                                          scope="trans_update_gate_ln_l%d" %i))
+            ch = tf.tanh(rh * linear(new_state, self._num_units, True, False,
+                                     scope="trans_candidate_l%d" %i))
+            if self._keep_prob and self._keep_prob < 1.0:
+                ch = tf.nn.dropout(ch, self._keep_prob)
+
+            new_state = (1.0 - uh) * new_state + uh * ch
+
+        return new_state, new_state#GRU输出的东西相同
