@@ -17,7 +17,7 @@
 
 ## DT Cell
 * ![](DTceLL.png)
-* 代码如下：<br>
+<br>
 class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):
     """ DL4MT's implementation of GRUCell with LAU and Transition
     Args:
