@@ -23,6 +23,7 @@
 * ![](v2-96c7d1e2fb79fa3f33eaedf1c01a5e48_r.jpg)
 
 ## DT Cell
+* 使用2019.06公开的DeepTransitionGRU替换传统GRU，DT相比GRU，内部将学习机制精细化，通过设置多个控制门以及线性映射，使神经细胞反复学习应该遗忘，记住，更新什么内容；同时加入Dropout，残差连接，避免过拟合与梯度消散
 * ![](DTceLL.png) <br>
 
 class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):
