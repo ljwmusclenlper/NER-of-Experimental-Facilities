@@ -432,9 +432,9 @@ def main(args):
                 checkpoint_dir=params.output, hooks=train_hooks,
                 save_checkpoint_secs=None,save_summaries_steps=2000,config=config) as sess:
             while not sess.should_stop():
-                #utils.session_run(sess, zero_op)
-                #for i in range(1, params.update_cycle):
-                    #utils.session_run(sess, collect_op)
+                utils.session_run(sess, zero_op)
+                for i in range(1, params.update_cycle):
+                    utils.session_run(sess, collect_op)
                 sess.run(train_op)                
                 
                

@@ -345,16 +345,16 @@ def model_graph(features, labels, params):
                                 maxlen=tf.shape(encoder_output)[1],
                                 dtype=tf.float32)
     src_mask = tf.expand_dims(src_mask,axis=2)#[?,?,1]
-    initial_state = tf.reduce_sum(encoder_output * src_mask, axis=1) / tf.reduce_sum(src_mask, axis=1)#依然是全局特征相当于mean pool
+    initial_state = tf.reduce_sum(encoder_output * src_mask, axis=1) / tf.reduce_sum(src_mask, axis=1)#全局特征相当于mean pool
 
     # Shift left
-    shifted_tgt_inputs = tf.pad(tgt_inputs, [[0, 0], [1, 0], [0, 0]])
-    shifted_tgt_inputs = shifted_tgt_inputs[:, :-1, :]#这里第一个输入的target是0
-    #  更改：标签输入第一个字改成bos------------更改--------------------------------------
-    #without_first_tgt=tgt_inputs[:,1:,:]
-    #bos_tenor=tgt_emb[params.mapping["target"]["<bos>"]]
-    #bos_tenor=tf.tile(tf.expand_dims(tf.expand_dims(bos_tenor,0),1),(batch_size,1,1))
-    #shifted_tgt_inputs=tf.concat([bos_tenor,without_first_tgt],1)
+    #shifted_tgt_inputs = tf.pad(tgt_inputs, [[0, 0], [1, 0], [0, 0]])# 标签左移，seq2seq常规操作
+    #shifted_tgt_inputs = shifted_tgt_inputs[:, :-1, :]#这里第一个输入的target是0
+    #  ---------------标签输入第一个字为bos--------------------------------------------------
+    without_first_tgt=tgt_inputs[:,1:,:]
+    bos_tenor=tgt_emb[params.mapping["target"]["<bos>"]]
+    bos_tenor=tf.tile(tf.expand_dims(tf.expand_dims(bos_tenor,0),1),(batch_size,1,1))
+    shifted_tgt_inputs=tf.concat([bos_tenor,without_first_tgt],1)
     #----------------------------------------更改------------------------------
     cell = get_rnn_cell(params.rnn_cell, params.hidden_size, params.rnn_dropout, params.transition_num)
     decoder_output = _decoder(cell, shifted_tgt_inputs, encoder_output, length, initial_state)
@@ -365,7 +365,7 @@ def model_graph(features, labels, params):
         shifted_tgt_inputs,
         shifted_outputs,
     ]
-    #maxout_size = params.hidden_size*params.maxnum  #A1这是改掉的地方，注释掉了
+    #maxout_size = params.hidden_size*params.maxnum  #
 
     if labels is None:
         # Special case for non-incremental decoding
@@ -373,7 +373,7 @@ def model_graph(features, labels, params):
             shifted_tgt_inputs[:, -1, :],
             shifted_outputs[:, -1, :],
         ]
-        readout = layers.nn.maxout(maxout_features,params.hidden_size, params.maxnum,#A2这里也改了，maxout_size被我换成了params.hidden_size
+        readout = layers.nn.maxout(maxout_features,params.hidden_size, params.maxnum,#maxout_size===>params.hidden_size
                                    concat=False)
         readout = tf.tanh(readout)
 
@@ -398,34 +398,33 @@ def model_graph(features, labels, params):
     logits = layers.nn.linear(readout, tgt_vocab_size, True, False,
                               scope="softmax")
   
-    #加入条件随机场
-       
-    with tf.name_scope("crf") :
-        log_likelihood,transition_matrix=crf.crf_log_likelihood(logits,labels,sequence_lengths=features["source_length"])
-    cost = -tf.reduce_mean(log_likelihood)
-    return cost
+    #加入条件随机场    
+    #with tf.name_scope("crf") :
+        #log_likelihood,transition_matrix=crf.crf_log_likelihood(logits,labels,sequence_lengths=features["source_length"])
+    #cost = -tf.reduce_mean(log_likelihood)
+    #return cost
 
 
     #直接使用soft_max      
     
-    #logits = tf.reshape(logits, [-1, tgt_vocab_size])
-    #ce = layers.nn.smoothed_softmax_cross_entropy_with_logits(
-        #logits=logits,
-        #labels=labels,
-        #smoothing=params.label_smoothing,
-        #normalize=True
-    #)
-    #ce = tf.reshape(ce, tf.shape(labels))
-    #tgt_mask = tf.to_float(
-        #tf.sequence_mask(
-            #features["target_length"],
-            #maxlen=tf.shape(features["target"])[1]
-        #)
-    #)
+    logits = tf.reshape(logits, [-1, tgt_vocab_size])
+    ce = layers.nn.smoothed_softmax_cross_entropy_with_logits(
+        logits=logits,
+        labels=labels,
+        smoothing=params.label_smoothing,
+        normalize=True
+    )
+    ce = tf.reshape(ce, tf.shape(labels))
+    tgt_mask = tf.to_float(
+        tf.sequence_mask(
+            features["target_length"],
+            maxlen=tf.shape(features["target"])[1]
+        )
+    )
 
-    #loss = tf.reduce_sum(cost * tgt_mask) / tf.reduce_sum(tgt_mask)
+    loss = tf.reduce_sum(ce * tgt_mask) / tf.reduce_sum(tgt_mask)
 
-    #return loss
+    return loss
 
 
 class RNNsearch(interface.NMTModel):
