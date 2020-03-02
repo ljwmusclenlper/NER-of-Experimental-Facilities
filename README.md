@@ -18,9 +18,8 @@
 ## DT Cell
 * ![](DTceLL.png)
 * 代码如下：<br>
-    class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):
+class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):
     """ DL4MT's implementation of GRUCell with LAU and Transition
-
     Args:
         num_units: int, The number of units in the RNN cell.
         reuse: (optional) Python boolean describing whether to reuse
