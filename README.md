@@ -17,6 +17,7 @@
 
 ## DT Cell
 * ![](DTceLL.png) <br>
+
 class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):
 
     def __init__(self, num_transi, num_units, keep_prob=None, reuse=None):
