@@ -16,15 +16,14 @@
 * ![](v2-96c7d1e2fb79fa3f33eaedf1c01a5e48_r.jpg)
 
 ## DT Cell
-* ![](DTceLL.png)
-<br>
-class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):
-    """ DL4MT's implementation of GRUCell with LAU and Transition
-    Args:
-        num_units: int, The number of units in the RNN cell.
-        reuse: (optional) Python boolean describing whether to reuse
-            variables in an existing scope.  If not `True`, and the existing
-            scope already has the given variables, an error is raised.
+* ![](DTceLL.png) <br>
+class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):<br>
+    """ DL4MT's implementation of GRUCell with LAU and Transition<br>
+    Args:<br>
+        num_units: int, The number of units in the RNN cell.<br>
+        reuse: (optional) Python boolean describing whether to reuse<br>
+            variables in an existing scope.  If not `True`, and the existing<br>
+            scope already has the given variables, an error is raised.<br>
     """
 
     def __init__(self, num_transi, num_units, keep_prob=None, reuse=None):
