@@ -3,6 +3,11 @@
 * 先使用DT Cell 双向抽取、经过MaxPool/EveragePool得到全局表征
 * 使用改进的GRU Cell  ==>  DT Cell(Deep Transition cell;来自腾讯2019) 处理时序问题更强
 ## 架构图
+* 英文语料可以使用char_CNN,中文语料用不用char都无所谓
+* 使用Glove字向量作为初始嵌入，加入位置特征，放入双向DT Cell抽取句向量，使用Attention方式在自的维度加权求和，得到Global特征向量[seq,size]
+* 将全据向量concat到初始嵌入的每个字上，再次进入DT Cell编码，得到编码向量。
+* 训练阶段正常使用偏移的标签进行解码，损失计算使用Softmax,推理阶段使用BeamSearch解码器。
+* 当然也可以使用条件随机场：训练时损失层用tf.contrib.crf.crf_log_likelihood()计算log_likelihood,并得到状态转移矩阵transition_params。推理时使用tf.contrib.crf.viterbi_decode(),将训练时的transition_params和推理输出的概率传入即可得到最优解。
 ![](G.jpg)
 ## Inference解码器：BeamSearch
 * 关于BeamSearch的个人见解
