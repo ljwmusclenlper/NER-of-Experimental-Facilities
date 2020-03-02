@@ -17,14 +17,7 @@
 
 ## DT Cell
 * ![](DTceLL.png) <br>
-class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):<br>
-    """ DL4MT's implementation of GRUCell with LAU and Transition<br>
-    Args:<br>
-        num_units: int, The number of units in the RNN cell.<br>
-        reuse: (optional) Python boolean describing whether to reuse<br>
-            variables in an existing scope.  If not `True`, and the existing<br>
-            scope already has the given variables, an error is raised.<br>
-    """
+class DL4MTGRULAUTransiLNCell(tf.nn.rnn_cell.RNNCell):
 
     def __init__(self, num_transi, num_units, keep_prob=None, reuse=None):
         super(DL4MTGRULAUTransiLNCell, self).__init__(_reuse=reuse)
